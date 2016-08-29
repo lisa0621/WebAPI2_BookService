@@ -5,6 +5,10 @@ using System.Net.Http;
 using System.Web.Http;
 using Microsoft.Owin.Security.OAuth;
 using Newtonsoft.Json.Serialization;
+using System.Web.Http.OData.Builder;
+using WebAPI2_BookService.Models;
+using System.Web.Http.OData.Extensions;
+using System.Reflection;
 
 namespace WebAPI2_BookService
 {
@@ -12,6 +16,11 @@ namespace WebAPI2_BookService
     {
         public static void Register(HttpConfiguration config)
         {
+            ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
+            builder.EntitySet<Book>("Books");
+            builder.EntitySet<Author>("Authors");
+            config.Routes.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
+
             // Web API 設定和服務
             // 將 Web API 設定成僅使用 bearer 權杖驗證。
             config.SuppressDefaultHostAuthentication();
