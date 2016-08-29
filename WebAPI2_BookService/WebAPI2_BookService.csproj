@@ -238,6 +238,8 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Author.cs" />
     <Compile Include="Models\Book.cs" />
+    <Compile Include="Models\BookDetailDTO.cs" />
+    <Compile Include="Models\BookDTO.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\WebAPI2_BookServiceContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

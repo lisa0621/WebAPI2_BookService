@@ -38,16 +38,40 @@ namespace WebAPI2_BookService.Controllers
         /// <returns></returns>
         // GET: odata/Books
         [EnableQuery]
-        public IQueryable<Book> GetBooks()
+        public IQueryable<BookDTO> GetBooks()
         {
-            return db.Books;
+            var books = from b in db.Books
+                        select new BookDTO()
+                        {
+                            Id = b.Id,
+                            Title = b.Title,
+                            AuthorName = b.Author.Name
+                        };
+
+            return books;
         }
 
-        // GET: odata/Books(5)
-        [EnableQuery]
-        public SingleResult<Book> GetBook([FromODataUri] int key)
+
+        // GET api/Books/5
+        [ResponseType(typeof(BookDetailDTO))]
+        public async Task<IHttpActionResult> GetBook(int id)
         {
-            return SingleResult.Create(db.Books.Where(book => book.Id == key));
+            var book = await db.Books.Include(b => b.Author).Select(b =>
+                new BookDetailDTO()
+                {
+                    Id = b.Id,
+                    Title = b.Title,
+                    Year = b.Year,
+                    Price = b.Price,
+                    AuthorName = b.Author.Name,
+                    Genre = b.Genre
+                }).SingleOrDefaultAsync(b => b.Id == id);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(book);
         }
 
         // PUT: odata/Books(5)
@@ -87,8 +111,8 @@ namespace WebAPI2_BookService.Controllers
             return Updated(book);
         }
 
-        // POST: odata/Books
-        public async Task<IHttpActionResult> Post(Book book)
+        [ResponseType(typeof(Book))]
+        public async Task<IHttpActionResult> PostBook(Book book)
         {
             if (!ModelState.IsValid)
             {
@@ -98,7 +122,18 @@ namespace WebAPI2_BookService.Controllers
             db.Books.Add(book);
             await db.SaveChangesAsync();
 
-            return Created(book);
+            // New code:
+            // Load author name
+            db.Entry(book).Reference(x => x.Author).Load();
+
+            var dto = new BookDTO()
+            {
+                Id = book.Id,
+                Title = book.Title,
+                AuthorName = book.Author.Name
+            };
+
+            return CreatedAtRoute("DefaultApi", new { id = book.Id }, dto);
         }
 
         // PATCH: odata/Books(5)
