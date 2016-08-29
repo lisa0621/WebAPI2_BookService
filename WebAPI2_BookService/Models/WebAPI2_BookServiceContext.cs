@@ -17,6 +17,8 @@ namespace WebAPI2_BookService.Models
     
         public WebAPI2_BookServiceContext() : base("name=WebAPI2_BookServiceContext")
         {
+            // New code:
+            this.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
         }
 
         public System.Data.Entity.DbSet<WebAPI2_BookService.Models.Author> Authors { get; set; }
