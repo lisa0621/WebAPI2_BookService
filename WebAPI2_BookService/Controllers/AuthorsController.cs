@@ -9,59 +9,48 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Description;
-using System.Web.Http.ModelBinding;
-using System.Web.Http.OData;
-using System.Web.Http.OData.Routing;
 using WebAPI2_BookService.Models;
 
 namespace WebAPI2_BookService.Controllers
 {
-    /*
-    WebApiConfig 類別可能需要其他變更以新增此控制器的路由，請將這些陳述式合併到 WebApiConfig 類別的 Register 方法。注意 OData URL 有區分大小寫。
-
-    using System.Web.Http.OData.Builder;
-    using System.Web.Http.OData.Extensions;
-    using WebAPI2_BookService.Models;
-    ODataConventionModelBuilder builder = new ODataConventionModelBuilder();
-    builder.EntitySet<Author>("Authors");
-    config.Routes.MapODataServiceRoute("odata", "odata", builder.GetEdmModel());
-    */
-    [ApiExplorerSettings(IgnoreApi = false)]
-    public class AuthorsController : ODataController
+    public class AuthorsController : ApiController
     {
         private WebAPI2_BookServiceContext db = new WebAPI2_BookServiceContext();
 
-        // GET: odata/Authors
-        [EnableQuery]
+        // GET: api/Authors
         public IQueryable<Author> GetAuthors()
         {
             return db.Authors;
         }
 
-        // GET: odata/Authors(5)
-        [EnableQuery]
-        public SingleResult<Author> GetAuthor([FromODataUri] int key)
+        // GET: api/Authors/5
+        [ResponseType(typeof(Author))]
+        public async Task<IHttpActionResult> GetAuthor(int id)
         {
-            return SingleResult.Create(db.Authors.Where(author => author.Id == key));
-        }
-
-        // PUT: odata/Authors(5)
-        public async Task<IHttpActionResult> Put([FromODataUri] int key, Delta<Author> patch)
-        {
-            Validate(patch.GetEntity());
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            Author author = await db.Authors.FindAsync(key);
+            Author author = await db.Authors.FindAsync(id);
             if (author == null)
             {
                 return NotFound();
             }
 
-            patch.Put(author);
+            return Ok(author);
+        }
+
+        // PUT: api/Authors/5
+        [ResponseType(typeof(void))]
+        public async Task<IHttpActionResult> PutAuthor(int id, Author author)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (id != author.Id)
+            {
+                return BadRequest();
+            }
+
+            db.Entry(author).State = EntityState.Modified;
 
             try
             {
@@ -69,7 +58,7 @@ namespace WebAPI2_BookService.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!AuthorExists(key))
+                if (!AuthorExists(id))
                 {
                     return NotFound();
                 }
@@ -79,11 +68,12 @@ namespace WebAPI2_BookService.Controllers
                 }
             }
 
-            return Updated(author);
+            return StatusCode(HttpStatusCode.NoContent);
         }
 
-        // POST: odata/Authors
-        public async Task<IHttpActionResult> Post(Author author)
+        // POST: api/Authors
+        [ResponseType(typeof(Author))]
+        public async Task<IHttpActionResult> PostAuthor(Author author)
         {
             if (!ModelState.IsValid)
             {
@@ -93,51 +83,14 @@ namespace WebAPI2_BookService.Controllers
             db.Authors.Add(author);
             await db.SaveChangesAsync();
 
-            return Created(author);
+            return CreatedAtRoute("DefaultApi", new { id = author.Id }, author);
         }
 
-        // PATCH: odata/Authors(5)
-        [AcceptVerbs("PATCH", "MERGE")]
-        public async Task<IHttpActionResult> Patch([FromODataUri] int key, Delta<Author> patch)
+        // DELETE: api/Authors/5
+        [ResponseType(typeof(Author))]
+        public async Task<IHttpActionResult> DeleteAuthor(int id)
         {
-            Validate(patch.GetEntity());
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            Author author = await db.Authors.FindAsync(key);
-            if (author == null)
-            {
-                return NotFound();
-            }
-
-            patch.Patch(author);
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AuthorExists(key))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return Updated(author);
-        }
-
-        // DELETE: odata/Authors(5)
-        public async Task<IHttpActionResult> Delete([FromODataUri] int key)
-        {
-            Author author = await db.Authors.FindAsync(key);
+            Author author = await db.Authors.FindAsync(id);
             if (author == null)
             {
                 return NotFound();
@@ -146,7 +99,7 @@ namespace WebAPI2_BookService.Controllers
             db.Authors.Remove(author);
             await db.SaveChangesAsync();
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return Ok(author);
         }
 
         protected override void Dispose(bool disposing)
@@ -158,9 +111,9 @@ namespace WebAPI2_BookService.Controllers
             base.Dispose(disposing);
         }
 
-        private bool AuthorExists(int key)
+        private bool AuthorExists(int id)
         {
-            return db.Authors.Count(e => e.Id == key) > 0;
+            return db.Authors.Count(e => e.Id == id) > 0;
         }
     }
 }

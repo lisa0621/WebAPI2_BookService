@@ -481,11 +481,5 @@
             </summary>
             <param name="documentPath">The physical path to XML document.</param>
         </member>
-        <member name="M:WebAPI2_BookService.Controllers.BooksController.GetBooks">
-            <summary>
-            GetBooks
-            </summary>
-            <returns></returns>
-        </member>
     </members>
 </doc>
